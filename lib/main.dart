@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage>{
   final alturaController = TextEditingController();
   final pesoController = TextEditingController();
   final idController = TextEditingController();
+  
 //Variaveis
 String? classificacao;
 double? imcResultado;
@@ -32,6 +33,13 @@ String? mensagemErro;
 String? mensagemSucesso;
   
   Future<void> Cadastrar() async {
+    if (nomeController.text.isEmpty||alturaController.text.isEmpty||pesoController.text.isEmpty){
+      setState(() {
+        mensagemErro = 'Peencha nome,altura e peso';
+        mensagemSucesso = null;
+      });
+      return;
+    }
     String nome= nomeController.text;
     double altura=double.parse(alturaController.text);
     double peso=double.parse(pesoController.text);
@@ -115,6 +123,46 @@ Future<void> deletarImc() async {
   
   }
 }
+Future<void> atualizarImc() async {
+  String id = idController.text;
+  
+  Map<String, dynamic> dados = {};
+  
+  if(pesoController.text.isNotEmpty) { //se o campo estiver vazio ele nao executa, não entra no PATCH
+    dados['peso'] = double.parse(pesoController.text);
+ }
+ if(alturaController.text.isNotEmpty) {
+  dados['altura'] = double.parse(alturaController.text);
+ }
+ if(nomeController.text.isNotEmpty) {
+  dados['nome'] = nomeController.text;
+ }
+ String json=jsonEncode(dados);
+ 
+ 
+ //CORAÇAO DO PATCH
+  final resposta = await http.patch(Uri.parse('http://10.0.2.2:8080/imcs/$id'),
+  headers:{
+    'Content-Type': 'application/json',
+  },
+  body:json,
+  );
+  
+  
+  final resultado = jsonDecode(resposta.body);
+  if(resposta.statusCode ==200) {
+    setState(() {
+      mensagemSucesso = 'IMC atualizado com sucesso';
+      mensagemErro = null;
+    });
+  await listarImcs();
+   }else {
+    setState(() {
+      mensagemErro = resultado['erro'];
+      mensagemSucesso = null;
+    });
+   }
+}
   
     @override
   Widget build(BuildContext context) {
@@ -170,10 +218,19 @@ Future<void> deletarImc() async {
           },
           child: Text('Deletar IMCs'),
           ), 
-          for (var item in listaImcs)
-  Card(
-    child: Column(
-      children: [
+          
+          ElevatedButton(onPressed: () {
+              atualizarImc();
+            },
+            child: Text('Atualizar dados'),
+            ),
+            
+            for (var item in listaImcs)
+  
+  
+        Card(
+        child: Column(
+        children: [
         Text('ID: ${item['id']}'),
         Text('Nome: ${item['nome']}'),
         Text('Altura: ${item['altura']}'),

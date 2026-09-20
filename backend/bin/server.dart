@@ -6,14 +6,15 @@ import 'package:shelf_router/shelf_router.dart';
 
 final List<Map<String, dynamic>> imcs = []; //guardar entrada de dados em uma lista provisória
 
-// Configure routes.
+// Rotasss.
 final _router = Router()
   ..get('/', _rootHandler)
   ..get('/echo/<message>', _echoHandler)
   ..get('/imcs', _listarImcs)
   ..get('/imcs/<id>', _buscarImc)
   ..post('/imcs', _cadastrarImc)
-  ..delete('/imcs/<id>',_deletarImc);
+  ..delete('/imcs/<id>',_deletarImc)
+  ..patch('/imcs/<id>',_atualizarImc);
   
 Response _listarImcs(Request request) {
 
@@ -66,6 +67,55 @@ Response _deletarImc(Request request) {
     );
 }
 }
+Future<Response> _atualizarImc(Request request) async{
+  final id = int.parse(request.params['id']!);
+  final body = await request.readAsString();
+  final dados = jsonDecode(body);
+  try{
+  final resultado = imcs.firstWhere((item) => item
+  ['id'] == id,
+  );
+  
+
+  if (dados.containsKey('peso')) {
+    resultado['peso'] = dados['peso'];
+  }
+  if (dados.containsKey('altura')){
+    resultado['altura'] = dados['altura'];
+  }
+  if (dados.containsKey('nome')){
+    resultado['nome'] = dados['nome'];
+  } 
+  resultado['imc'] = 
+  resultado['peso']/ (resultado['altura'] * resultado['altura']
+  );
+  
+  final novoImc = resultado['imc'];
+  
+  if (novoImc < 18.5) {
+  resultado['classificacao'] = 'Você está abaixo do peso ideal';
+} else if (novoImc < 25) {
+  resultado['classificacao'] = 'Você está no peso adequado';
+} else if (novoImc < 30) {
+  resultado['classificacao'] = 'Você está com sobrepeso';
+} else if (novoImc < 35) {
+  resultado['classificacao'] = 'Você está em Obesidade grau I';
+} else if (novoImc < 40) {
+  resultado['classificacao'] = 'Você está em Obesidade grau II';
+} else {
+  resultado['classificacao'] = 'Você está em Obesidade grau III';
+}
+ return Response.ok(
+  jsonEncode(resultado),
+);
+  } catch (e) {
+    return Response.notFound(
+      jsonEncode({
+        'erro': 'ID não foi encontrado',
+      }),
+    );
+  }
+}
 Response _echoHandler(Request request) {
   final message = request.params['message'];
   return Response.ok('$message\n');
@@ -78,7 +128,16 @@ Future<Response> _cadastrarImc(Request request) async {
   final nome = dados['nome'];
   final altura = dados['altura'];
   final peso = dados['peso'];
-  
+
+  if (nome == null || altura == null || peso == null)
+ {
+  return Response(
+    400,
+    body:jsonEncode({
+      'erro': 'nome,altura e peso são obrigatórios',
+    }),
+  );
+ }  
   final imc = peso/(altura*altura);
   
 
