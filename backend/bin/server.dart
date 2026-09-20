@@ -12,7 +12,8 @@ final _router = Router()
   ..get('/echo/<message>', _echoHandler)
   ..get('/imcs', _listarImcs)
   ..get('/imcs/<id>', _buscarImc)
-  ..post('/imcs', _cadastrarImc);
+  ..post('/imcs', _cadastrarImc)
+  ..delete('/imcs/<id>',_deletarImc);
   
 Response _listarImcs(Request request) {
 
@@ -42,8 +43,29 @@ Response _buscarImc(Request request) {
     );
   }
 }
-
-
+Response _deletarImc(Request request) {
+  final id = int.parse(request.params['id']!);
+  
+  try {
+  final resultado = imcs.firstWhere(
+    (item) => item['id'] == id,
+  );
+  
+  imcs.remove(resultado); 
+  
+  return Response.ok(
+  jsonEncode({
+    'mensagem': 'IMC deletado com sucesso',
+  }),
+);
+} catch (e){
+    return Response.notFound(
+      jsonEncode({
+        'erro': 'ID não encontrado',
+      }),
+    );
+}
+}
 Response _echoHandler(Request request) {
   final message = request.params['message'];
   return Response.ok('$message\n');

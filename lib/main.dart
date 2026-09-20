@@ -29,6 +29,7 @@ double? imcResultado;
 List<dynamic> listaImcs = [];
 Map<String, dynamic>? imcBuscado;
 String? mensagemErro;
+String? mensagemSucesso;
   
   Future<void> Cadastrar() async {
     String nome= nomeController.text;
@@ -90,6 +91,30 @@ Future<void> listarImcs() async {
       });
      }
 }
+Future<void> deletarImc() async {
+  String id= idController.text;
+
+  final resposta = await http.delete(
+    Uri.parse('http://10.0.2.2:8080/imcs/$id'),
+  );
+  final dados = jsonDecode(resposta.body);
+  if (resposta.statusCode == 200){
+    setState((){
+      mensagemSucesso = dados['mensagem'];
+      mensagemErro = null;
+      });
+      
+      await listarImcs(); // espere o get do delete atualizar 
+
+      }else {
+        setState(() {
+          mensagemErro = dados['erro'];
+          mensagemSucesso = null;
+          
+        });
+  
+  }
+}
   
     @override
   Widget build(BuildContext context) {
@@ -139,6 +164,12 @@ Future<void> listarImcs() async {
             },
             child:Text('Listar IMCs'),
           ),
+         
+          ElevatedButton(onPressed: (){
+            deletarImc();
+          },
+          child: Text('Deletar IMCs'),
+          ), 
           for (var item in listaImcs)
   Card(
     child: Column(
@@ -160,6 +191,9 @@ Future<void> listarImcs() async {
 
           if (mensagemErro != null)
          Text(mensagemErro!),
+
+          if (mensagemSucesso !=null)
+          Text (mensagemSucesso!),
           
           if (imcBuscado != null)
         Card(
