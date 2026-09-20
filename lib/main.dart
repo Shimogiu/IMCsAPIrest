@@ -28,6 +28,7 @@ String? classificacao;
 double? imcResultado;
 List<dynamic> listaImcs = [];
 Map<String, dynamic>? imcBuscado;
+String? mensagemErro;
   
   Future<void> Cadastrar() async {
     String nome= nomeController.text;
@@ -76,9 +77,18 @@ Future<void> listarImcs() async {
     Uri.parse('http://10.0.2.2:8080/imcs/$id'),
     );
      final dados=jsonDecode(resposta.body);
-     setState((){
+     if (resposta.statusCode == 200) {
+      setState((){
       imcBuscado = dados;
+      mensagemErro = null;
      });
+     }
+     else {
+      setState((){
+        imcBuscado = null;
+        mensagemErro = 'ID não encontrado';
+      });
+     }
 }
   
     @override
@@ -148,11 +158,13 @@ Future<void> listarImcs() async {
           if (classificacao != null)
           Text('Classificação: $classificacao'),
 
+          if (mensagemErro != null)
+         Text(mensagemErro!),
+          
           if (imcBuscado != null)
-          Text('IMC: ${imcBuscado!['imc'].toStringAsFixed(2)}'),
-  Card(
-    child: Column(
-      children: [
+        Card(
+        child: Column(
+        children: [
         Text('ID: ${imcBuscado!['id']}'),
         Text('Nome: ${imcBuscado!['nome']}'),
         Text('Altura: ${imcBuscado!['altura']}'),
