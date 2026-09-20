@@ -23,10 +23,11 @@ class _HomePageState extends State<HomePage>{
   final alturaController = TextEditingController();
   final pesoController = TextEditingController();
   final idController = TextEditingController();
-
+//Variaveis
 String? classificacao;
 double? imcResultado;
 List<dynamic> listaImcs = [];
+Map<String, dynamic>? imcBuscado;
   
   Future<void> Cadastrar() async {
     String nome= nomeController.text;
@@ -75,6 +76,9 @@ Future<void> listarImcs() async {
     Uri.parse('http://10.0.2.2:8080/imcs/$id'),
     );
      final dados=jsonDecode(resposta.body);
+     setState((){
+      imcBuscado = dados;
+     });
 }
   
     @override
@@ -111,7 +115,7 @@ Future<void> listarImcs() async {
           ),
           ElevatedButton(
             onPressed:(){
-
+            buscarImc();
             },
             child:Text('Buscar por ID'),
             ),
@@ -143,6 +147,21 @@ Future<void> listarImcs() async {
 
           if (classificacao != null)
           Text('Classificação: $classificacao'),
+
+          if (imcBuscado != null)
+          Text('IMC: ${imcBuscado!['imc'].toStringAsFixed(2)}'),
+  Card(
+    child: Column(
+      children: [
+        Text('ID: ${imcBuscado!['id']}'),
+        Text('Nome: ${imcBuscado!['nome']}'),
+        Text('Altura: ${imcBuscado!['altura']}'),
+        Text('Peso: ${imcBuscado!['peso']}'),
+        Text('IMC: ${imcBuscado!['imc']}'),
+        Text('Classificação: ${imcBuscado!['classificacao']}'),
+      ],
+    ),
+  ),
 ],
   ),
     );
